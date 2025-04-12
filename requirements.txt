@@ -1,0 +1,19 @@
+streamlit
+requests
+speechrecognition
+pyaudio ; platform_system == "Windows"
+fpdf
+flask
+flask_cors
+python-dotenv
+psycopg2-binary
+pytesseract
+pillow
+pdf2image
+google-generativeai
+langdetect
+googletrans==4.0.0-rc1
+opencv-python
+fitz
+PyMuPDF
+numpy
