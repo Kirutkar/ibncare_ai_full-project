@@ -6,7 +6,7 @@
 - 🤖 Chatbot (English + Arabic support)
 - 📝 Log Daily Symptoms
 - 🩺 Track Chronic Conditions
-- 📑 Upload Medical Reports (Image or PDF)
+- 📑 Upload Medical Reports (Image files like jpeg,jpg or png)
 - 📤 Export PDF Health Summary
 - 🧘 Daily Affirmations for mental wellness
 
