@@ -1,45 +1,48 @@
-# ibncare_ai_full-project
-**IbnCare AI** is a simple yet thoughtful AI-powered health assistant built to provide gentle health support, symptom tracking, and emotional reassurance. It allows users to chat about their health, log symptoms, manage chronic conditions, and export a personal health summary – all in a clean, mobile-friendly interface.
+🩺 IbnCare AI – Your Personal Health & Wellness Assistant
 
-## 🌟 Key Features
+IbnCare AI is a thoughtful AI-powered health assistant designed to provide gentle health support, symptom tracking, and emotional reassurance. It enables users to chat about their health, log symptoms, manage chronic conditions, and export a personal health summary—all within a clean, mobile-friendly interface.
 
-- 🤖 Chatbot (English + Arabic support)
-- 📝 Log Daily Symptoms
-- 🩺 Track Chronic Conditions
-- 📑 Upload Medical Reports (Image files like jpeg,jpg or png)
-- 📤 Export PDF Health Summary
-- 🧘 Daily Affirmations for mental wellness
+🌟 Key Features
 
----
+🤖 Chatbot: Supports both English and Arabic languages.
 
+📝 Log Daily Symptoms: Keep track of your daily health status.
+
+🩺 Track Chronic Conditions: Monitor ongoing health issues.
+
+📑 Upload Medical Reports: Accepts image files (.jpeg, .jpg, .png).
+
+📤 Export PDF Health Summary: Generate a comprehensive health report.
+
+🧘 Daily Affirmations: Receive daily mental wellness tips.
+
+🗂️ Project Structure
 
 ibncare_ai_local/
 
-├── app_backend.py
+├── app_backend.py        # Flask backend handling API routes
 
-├── app_frontend.py
+├── app_frontend.py       # Streamlit frontend for user interaction
 
-├── utils.py
+├── utils.py              # Utility functions for image processing
 
-├── ibncare_banner.png
+├── ibncare_banner.png    # UI banner image for branding
 
-├── requirements.txt
+├── requirements.txt      # Python dependencies
 
-├── .env.example
+├── .env.example          # Example environment variables file
 
-└── README.md
+└── README.md             # Project documentation
 
+⚙️ Local Setup Instructions
 
-
-## ⚙️ Local Setup Instructions
-
-### 1. 📁 `.env` Setup
-
-Create a `.env` file with the following:
+1. 📁 Environment Variables Setup
+   
+Create a .env file in the root directory with the following content:
 
 GOOGLE_API_KEY=your_google_api_key
 
-Neon/PostgreSQL Database
+# PostgreSQL Database Configuration
 
 PG_HOST=your_host
 
@@ -47,75 +50,65 @@ PG_USER=your_user
 
 PG_PASSWORD=your_password
 
-PG_DATABASE=your_db 
+PG_DATABASE=your_database
 
-> ⚠️ **Voice Input not supported in this version due to PyAudio limitations.** This local version supports text input (Arabic + English).
+⚠️ Note: Voice input is not supported in this version due to PyAudio limitations. This local version supports text input in both Arabic and English.
 
----
-2. 🧪 Install Dependencies
-
+2. 🧪 Install Python Dependencies
+   
 Install all required Python packages using:
 
 pip install -r requirements.txt
 
-
-3. 🧠 Run the App
-
-# Start the Flask Backend
+3. 🧠 Run the Application Locally
+   
+Start the Flask backend:
 
 python app_backend.py
 
-# In a separate terminal, launch the Streamlit Frontend
+In a separate terminal, launch the Streamlit frontend:
 
-streamlit run app.py
+streamlit run app_frontend.py
 
-## 🗒️ Notes
+🗒️ Additional Notes
 
-✅ This project works entirely on local machines.
+This project is designed to run fully on local systems.
 
-❌ Voice input is disabled in deployment (due to PyAudio + Render compatibility).
+Voice input is not supported in this version due to PyAudio limitations.
 
-✅ Voice input works perfectly in local environments (supports English & Arabic).
+The scan upload feature (OCR + AI summary) works for .jpeg, .jpg, and .png formats. PDF support is not available at this time.
 
-📑 Scan Upload supports JPG, JPEG, PNG only – PDF support is coming soon.
+Future enhancements planned:
 
-🧭 Future Plans
+Add a date of birth field (instead of age) for consistent tracking.
 
-Replace age with date of birth for consistent tracking
+Generate unique User IDs for better user management.
 
-Generate unique user IDs for better health history management
+🚀 What's Unique?
 
-🚀 What Makes It Unique?
+A gentle, human-centered approach to health.
 
-💚 A gentle, human-centered approach to health
+Bilingual chatbot supporting Arabic and English.
 
-🌐 Arabic + English chatbot support
+Thoughtful logic for symptoms, medical history, and personalization.
 
-🧠 Smart logic based on symptom history + conditions
+Simple scan upload feature with AI-generated explanations.
 
-📤 Exportable health summary for doctor visits
-
-📑 Scan upload with simplified AI explanation
-
-
-
+Export-ready health summary for personal use or doctor visits.
 
 📷 Sneak Peek
 
 ![image](https://github.com/user-attachments/assets/0a28fee7-5671-4b10-8233-64879978a880)
 
 
-🧠 Note
+🧠 Final Thoughts
 
-This project was built with care and simplicity in mind – no advanced NLP libraries or ML models used, only thoughtful use of Google Gemini API and practical healthcare flows. It's designed to feel like a helpful friend in your pocket 💚
+This project was built with care and simplicity in mind—no advanced NLP libraries or ML models used. It leverages the Google Gemini API and practical healthcare flows to provide a supportive experience. It's designed to feel like a helpful friend in your pocket 💚
 
 👩‍💻 Author
 
-Built by:Kiruthika Ramalingam
+Built by: Kiruthika Ramalingam
 
 For: AI Application Challenge 2025 – Final Submission
 
 Project Goal: Help users feel seen, cared for, and supported.
-
-
-
