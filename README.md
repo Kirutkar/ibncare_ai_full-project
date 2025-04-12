@@ -71,25 +71,33 @@ streamlit run app.py
 
 ## 🗒️ Notes
 
-- This project runs fully on local systems.
-- For deployment, voice input is not supported (due to PyAudio limitations on Render).
-- Voice input works perfectly on local installations. Just run the app and speak in English or Arabic!
-- Scan upload (OCR + AI summary) works for jpeg,jpg,png format,doesn't support pdf for time being.
-- In future versions, we plan to:
-  - Add a date of birth field (instead of age) for consistent tracking.
-  - Generate unique User IDs.
- 
-🚀 What's Unique?
+✅ This project works entirely on local machines.
 
-A gentle, human-centered approach to health
+❌ Voice input is disabled in deployment (due to PyAudio + Render compatibility).
 
-Arabic + English input chatbot replies
+✅ Voice input works perfectly in local environments (supports English & Arabic).
 
-Thoughtful logic for symptoms + medical history + personalization
+📑 Scan Upload supports JPG, JPEG, PNG only – PDF support is coming soon.
 
-Simple scan upload feature with AI explanation
+🧭 Future Plans
 
-Export-ready health summary for personal use or doctor visits
+Replace age with date of birth for consistent tracking
+
+Generate unique user IDs for better health history management
+
+🚀 What Makes It Unique?
+
+💚 A gentle, human-centered approach to health
+
+🌐 Arabic + English chatbot support
+
+🧠 Smart logic based on symptom history + conditions
+
+📤 Exportable health summary for doctor visits
+
+📑 Scan upload with simplified AI explanation
+
+
 
 
 📷 Sneak Peek
