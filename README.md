@@ -10,7 +10,7 @@ IbnCare AI is a thoughtful AI-powered health assistant designed to provide gentl
 
 🩺 Track Chronic Conditions: Monitor ongoing health issues.
 
-📑 Upload Medical Reports: Accepts image files (.jpeg, .jpg, .png).
+📑 Upload Medical Reports: Accepts image files (.jpeg, .jpg, .pdf).
 
 📤 Export PDF Health Summary: Generate a comprehensive health report.
 
@@ -23,8 +23,6 @@ ibncare_ai_local/
 ├── app_backend.py        # Flask backend handling API routes
 
 ├── app_frontend.py       # Streamlit frontend for user interaction
-
-├── utils.py              # Utility functions for image processing
 
 ├── ibncare_banner.png    # UI banner image for branding
 
@@ -41,6 +39,8 @@ ibncare_ai_local/
 Create a .env file in the root directory with the following content:
 
 GOOGLE_API_KEY=your_google_api_key
+
+OCR_SPACE_API_KEY=your_ocr_space_api_key
 
 # PostgreSQL Database Configuration
 
@@ -76,7 +76,7 @@ This project is designed to run fully on local systems.
 
 Voice input is not supported in this version due to PyAudio limitations.
 
-The scan upload feature (OCR + AI summary) works for .jpeg, .jpg, and .png formats. PDF support is not available at this time.
+The scan upload feature (OCR + AI summary) works for .jpeg, .jpg, and .pdf formats
 
 Future enhancements planned:
 
