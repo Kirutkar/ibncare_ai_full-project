@@ -1,21 +1,11 @@
 import os
-import google.generativeai as genai
 from dotenv import load_dotenv
 from fpdf import FPDF
 from flask import send_file
 import tempfile
 from flask import Flask, request, jsonify
-import pytesseract
-from PIL import Image
-import io
 import google.generativeai as genai
 from flask_cors import CORS
-import fitz
-from pdf2image import convert_from_path
-
-POPPLER_PATH = r'C:\poppler-21.02.0\Library\bin'
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-
 
 
 # --- Load environment variables ---
@@ -28,8 +18,6 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-
-
 app = Flask(__name__)
 CORS(app)  # Enable CORS
 
@@ -38,8 +26,6 @@ cache = {}
 
 import psycopg2
 import psycopg2.extras  # ✅ ADD THIS LINE
-
-
 
 
 def connect_db():
@@ -57,8 +43,10 @@ def connect_db():
         print(f"❌ PostgreSQL Connection Error: {e}")
         return None
 
+
 from langdetect import detect
 from googletrans import Translator
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -135,7 +123,8 @@ def chat():
 
     is_health_related = is_diet_query or is_full_meal_request or is_symptom_or_pain or is_remedy_related or is_fear_or_emergency
     if not is_health_related:
-        return jsonify({"response": "🙏 I'm here to support your health. Please ask something related to symptoms, remedies, or diet. 💚"})
+        return jsonify({
+                           "response": "🙏 I'm here to support your health. Please ask something related to symptoms, remedies, or diet. 💚"})
 
     # Prompt build
     health_context = f"The user is a {age}-year-old {gender} named {user_name}. "
@@ -171,14 +160,31 @@ def chat():
             final_response = response.candidates[0].content.parts[0].text.strip()
             cache[cache_key] = final_response
 
+        # Store chat in database
+        try:
+            conn = connect_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO chat_history (user_name, gender, age, question, response)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_name, gender, int(age), user_message, final_response))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print("Failed to save chat:", str(e))
+
         if is_arabic:
             final_response = translator.translate(final_response, src='en', dest='ar').text
 
-        return jsonify({"response": new_user_disclaimer + final_response})
+        return jsonify({
+            "response": new_user_disclaimer + final_response,
+            })
+
+
 
     except Exception as e:
         return jsonify({"response": f"❌ AI Error: {str(e)}"})
-
 
 
 @app.route("/log_symptom", methods=["POST"])
@@ -206,7 +212,7 @@ def log_symptom():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # --- Analyze symptoms if we have 7 days of logs ---
-        
+
         cursor.execute("""
             SELECT symptom, gender, age 
             FROM symptoms 
@@ -253,6 +259,7 @@ def log_symptom():
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
 
 @app.route("/get_symptoms", methods=["POST"])
 def get_symptoms():
@@ -303,13 +310,14 @@ def log_medical_history():
     data = request.get_json()
 
     if not data or "medical_user_name" not in data or "condition_type" not in data or "gender" not in data or "age" not in data:
-        return jsonify({"error": "Invalid input. 'medical_user_name', 'condition_type', 'gender', and 'age' required."}), 400
+        return jsonify(
+            {"error": "Invalid input. 'medical_user_name', 'condition_type', 'gender', and 'age' required."}), 400
 
     user_name = data["medical_user_name"]
     condition_type = data["condition_type"]
     description = data.get("condition_description", "")
     gender = data["gender"]
-    age =str(data["age"])
+    age = str(data["age"])
 
     conn = connect_db()
     if conn is None:
@@ -336,7 +344,9 @@ def log_medical_history():
         if conn:
             conn.close()
 
+
 import psycopg2  # ensure this is imported if not already
+
 
 @app.route("/get_medical_history", methods=["POST"])
 def get_medical_history():
@@ -366,7 +376,8 @@ def get_medical_history():
         if not records:
             return jsonify({"message": "No medical history found for this user."})
 
-        result = [{"condition_type": r[0], "condition_description": r[1], "date": r[2].strftime('%Y-%m-%d')} for r in records]
+        result = [{"condition_type": r[0], "condition_description": r[1], "date": r[2].strftime('%Y-%m-%d')} for r in
+                  records]
         return jsonify({"user": medical_user_name, "medical_history": result})
 
     except psycopg2.Error as err:
@@ -386,7 +397,7 @@ def analyze_symptoms():
 
     user_name = data["user_name"].strip().lower()
     gender = data["gender"].strip().lower()
-    age =str(data["age"])
+    age = str(data["age"])
 
     conn = connect_db()
     if conn is None:
@@ -443,64 +454,94 @@ def analyze_symptoms():
         if cursor: cursor.close()
         if conn: conn.close()
 
+
 @app.route("/export_pdf", methods=["POST"])
 def export_pdf():
     data = request.get_json()
 
-    required_fields = ["user_name", "gender", "age", "chat_history", "symptoms", "medical_history"]
+    required_fields = ["user_name", "gender", "age", "symptoms", "medical_history"]
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields in request."}), 400
 
     user_name = data["user_name"]
     gender = data["gender"]
-    age = str(data["age"])
-    chat_history = data["chat_history"]
+    age = int(data["age"])
     symptoms = data["symptoms"]
     medical_history = data["medical_history"]
 
     def safe_text(text):
         return str(text).encode("latin-1", errors="ignore").decode("latin-1")
 
+    # ⛏️ Fetch Chat History from DB
+    conn = connect_db()
+    if conn is None:
+        return jsonify({"error": "Database connection failed."}), 500
+
+    chat_history = []
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT question, response, created_at FROM chat_history
+            WHERE LOWER(TRIM(user_name)) = %s AND LOWER(TRIM(gender)) = %s AND age = %s
+            ORDER BY created_at;
+        """, (user_name.lower().strip(), gender.lower().strip(), age))
+        chat_history = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"error": f"DB Error while fetching chat history: {str(e)}"}), 500
+
+    # 📝 Create PDF
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-
     pdf.cell(200, 10, txt=safe_text("AI Health Summary"), ln=True, align='C')
     pdf.ln(10)
     pdf.cell(200, 10, txt=safe_text(f"Name: {user_name} | Gender: {gender} | Age: {age}"), ln=True)
 
-    # Chat History
+    # 📚 Chat History
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(200, 10, txt="Chat History:", ln=True)
     pdf.set_font("Arial", size=12)
-    for item in chat_history:
-        pdf.multi_cell(0, 10, safe_text(f"Q: {item['question']}\nA: {item['response']}"))
-        pdf.ln(2)
+    if chat_history:
+        for q, a, _ in chat_history:
+            pdf.multi_cell(0, 10, safe_text(f"Q: {q}\nA: {a}"))
+            pdf.ln(2)
+    else:
+        pdf.cell(200, 10, txt="No chat history found.", ln=True)
 
-    # Symptoms
+    # 🩺 Symptoms
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(200, 10, txt="Logged Symptoms:", ln=True)
     pdf.set_font("Arial", size=12)
-    for s in symptoms:
-        pdf.cell(200, 10, txt=safe_text(f"- {s['symptom']} ({s['date']})"), ln=True)
+    if symptoms:
+        for s in symptoms:
+            pdf.cell(200, 10, txt=safe_text(f"- {s['symptom']} ({s['date']})"), ln=True)
+    else:
+        pdf.cell(200, 10, txt="No symptom data found.", ln=True)
 
-    # Medical History
+    # 🩻 Medical History
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(200, 10, txt="Medical History:", ln=True)
     pdf.set_font("Arial", size=12)
-    for m in medical_history:
-        pdf.multi_cell(0, 10, safe_text(f"- {m['condition_type']}: {m['condition_description']} ({m['date']})"))
-        pdf.ln(1)
+    if medical_history:
+        for m in medical_history:
+            pdf.multi_cell(0, 10, safe_text(f"- {m['condition_type']}: {m['condition_description']} ({m['date']})"))
+            pdf.ln(1)
+    else:
+        pdf.cell(200, 10, txt="No medical history found.", ln=True)
 
-    # Save to a temp file and return
+    # 💾 Save and send
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         pdf.output(tmp_file.name)
         tmp_file.flush()
         return send_file(tmp_file.name, as_attachment=True, download_name=f"{user_name}_health_summary.pdf")
 
 
-from utils import preprocess  # make sure utils.py is in same folder
+
+
+import requests
 
 @app.route("/upload_scan", methods=["POST"])
 def upload_scan():
@@ -509,46 +550,36 @@ def upload_scan():
 
     file = request.files['file']
     filename = file.filename.lower()
-    extracted_text = ""
 
+    # Send file to OCR.Space
     try:
-        if filename.endswith(('.png', '.jpg', '.jpeg')):
-            image = Image.open(file.stream)
-            processed = preprocess(image)
-            extracted_text = pytesseract.image_to_string(Image.fromarray(processed))
+        payload = {
+            'apikey': os.getenv("OCR_SPACE_API_KEY"),
+            'language': 'eng',
+            'isOverlayRequired': False
+        }
 
-        elif filename.endswith('.pdf'):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf:
-                tmp_pdf.write(file.read())
-                tmp_pdf_path = tmp_pdf.name
+        ocr_response = requests.post(
+            'https://api.ocr.space/parse/image',
+            files={'file': (filename, file.stream, file.mimetype)},
+            data=payload,
+        )
 
-            try:
-                images = convert_from_path(tmp_pdf_path, poppler_path=POPPLER_PATH)
+        result = ocr_response.json()
+        parsed_results = result.get("ParsedResults", [])
+        if not parsed_results:
+            return jsonify({"error": "OCR failed. No text found."}), 400
 
-                if not images or len(images) == 0:
-                    return jsonify({"error": "❌ PDF loaded, but no pages rendered. Please try another file."}), 400
+        extracted_text = parsed_results[0].get("ParsedText", "").strip()
+        if not extracted_text:
+            return jsonify({"error": "No readable text in the file."}), 400
 
-                for img in images:
-                    processed = preprocess(img)
-                    extracted_text += pytesseract.image_to_string(Image.fromarray(processed))
-
-            except Exception as pdf_err:
-                return jsonify({"error": f"❌ PDF processing failed: {str(pdf_err)}"}), 500
-            finally:
-                os.remove(tmp_pdf_path)
-
-        else:
-            return jsonify({"error": "Unsupported file format."}), 400
-
-        if not extracted_text.strip():
-            return jsonify({"error": "❌ No text could be read. Try a clearer PDF or image scan."}), 400
-
-        # AI summary
+        # AI Summary from Gemini
         prompt = (
             "You are a calm and caring AI assistant. A user has uploaded this medical scan/report text:\n\n"
             f"{extracted_text}\n\n"
-            "Please explain it in simple, kind language. Gently summarize the key findings, and if it sounds alarming, add a calm disclaimer like: "
-            "'Please don’t panic. This is only a machine reading and not a diagnosis. Always consult a doctor.'"
+            "Please explain it in simple, kind language. Gently summarize the key findings. "
+            "If anything sounds serious, add: 'Please don’t panic. This is only a machine reading. Always consult a doctor.'"
         )
 
         model = genai.GenerativeModel("gemini-2.0-flash")
