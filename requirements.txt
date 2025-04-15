@@ -1,19 +1,9 @@
-streamlit
-requests
-speechrecognition
-pyaudio ; platform_system == "Windows"
-fpdf
 flask
-flask_cors
+flask-cors
 python-dotenv
-psycopg2-binary
-pytesseract
-pillow
-pdf2image
+requests
+fpdf
 google-generativeai
+psycopg2-binary
 langdetect
 googletrans==4.0.0-rc1
-opencv-python
-fitz
-PyMuPDF
-numpy
