@@ -7,3 +7,9 @@ google-generativeai
 psycopg2-binary
 langdetect
 googletrans==4.0.0-rc1
+streamlit
+speechrecognition
+pillow
+numpy
+opencv-python
+python-dotenv
